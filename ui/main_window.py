@@ -2,12 +2,14 @@ import os
 import customtkinter as ctk
 import tkinter.ttk as ttk
 import tkinter
+import platform
 import tkinter.messagebox as messagebox
 
 from PIL import Image, ImageTk
 from customtkinter import CTkLabel
 from services.media_service import MediaService
 from ui.add_edit_dialog import AddEditDialog
+from ui.settings_dialog import SettingsDialog
 from services.genre_service import GenreService
 
 ctk.set_appearance_mode("dark")
@@ -16,7 +18,10 @@ ctk.set_default_color_theme("blue")
 class MainWindow(ctk.CTk):
     def __init__(self, conn):
         super().__init__()
-        self.attributes("-zoomed", True)
+        if platform.system() == "Windows":
+            self.state("zoomed")
+        else:
+            self.attributes("-zoomed", True)
         self.resizable(True, True)
         self.geometry("1280x720")
         self.title("Media Manager")
@@ -31,7 +36,7 @@ class MainWindow(ctk.CTk):
         self.top_bar = ctk.CTkFrame(self)
         self.top_bar.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
         self.top_bar.grid_columnconfigure(0, weight=1)
-        self.top_bar.grid_columnconfigure(9, weight=1)
+        self.top_bar.grid_columnconfigure(10, weight=1)
 
         self.search_bar = ctk.CTkEntry(self.top_bar, placeholder_text = "Search", width=300)
         self.search_bar.grid(row=0, column=1, padx=10, pady=10)
@@ -55,6 +60,9 @@ class MainWindow(ctk.CTk):
 
         self.delete_button = ctk.CTkButton(self.top_bar, text="Delete", command=self.delete_selected)
         self.delete_button.grid(row=0, column=8, padx=10, pady=10)
+
+        self.settings_button = ctk.CTkButton(self.top_bar, text="Settings", command=self.open_settings_dialog)
+        self.settings_button.grid(row=0, column=9, padx=10, pady=10)
 
         self.main_content = ctk.CTkFrame(self)
         self.main_content.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
@@ -123,6 +131,10 @@ class MainWindow(ctk.CTk):
 
     def open_add_dialog(self):
         dialog = AddEditDialog(self.conn, self.load_table)
+        dialog.grab_set()
+
+    def open_settings_dialog(self):
+        dialog = SettingsDialog(self.conn)
         dialog.grab_set()
 
     def open_edit_dialog(self):
