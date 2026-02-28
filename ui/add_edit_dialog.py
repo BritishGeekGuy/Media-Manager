@@ -106,7 +106,15 @@ class AddEditDialog (ctk.CTkToplevel):
         media_format = self.format_entry.get()
         date_str = self.release_date_entry.get().replace("/", "-")
         if date_str != "":
-            release = datetime.datetime.strptime(date_str, "%d-%m-%Y").date()
+            try:
+                release = datetime.datetime.strptime(date_str, "%d-%m-%Y").date()
+            except ValueError:
+                messagebox.showwarning("Invalid Date", "Please enter the date in DD-MM-YYYY format.", parent=self)
+                return
+
+            if release > datetime.date.today():
+                messagebox.showwarning("Invalid Date", "Release date cannot be in the future.", parent=self)
+                return
         else:
             release = None
         barcode = self.barcode_entry.get()

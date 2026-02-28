@@ -2,7 +2,7 @@
 # Created by BritishGeekGuy
 # Released under GNU GPLv3
 
-prog_ver = "1.0.0"
+prog_ver = "1.0.1"
 
 from database.schema import *
 from database.connection import *

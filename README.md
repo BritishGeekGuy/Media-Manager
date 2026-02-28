@@ -1,4 +1,4 @@
-# Simple Media Manager (Ver. 1.0.0)
+# Simple Media Manager (Ver. 1.0.1)
 
 Simple Media Manager is a cross-platform application designed to simplify the management of physical media.
 Currently, it has the ability to store CDs and Vinyls however I may expand this in the future.
