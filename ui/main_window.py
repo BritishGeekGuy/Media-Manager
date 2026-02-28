@@ -7,13 +7,14 @@ import tkinter.messagebox as messagebox
 
 from PIL import Image, ImageTk
 from customtkinter import CTkLabel
+
 from services.media_service import MediaService
 from ui.add_edit_dialog import AddEditDialog
 from ui.settings_dialog import SettingsDialog
 from services.genre_service import GenreService
+from services.config_service import ConfigService
 
-ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
+config_service = ConfigService()
 
 class MainWindow(ctk.CTk):
     def __init__(self, conn):
@@ -72,11 +73,6 @@ class MainWindow(ctk.CTk):
 
         self.table = ttk.Treeview(self.main_content, columns=("title", "artist", "genre", "format"), show="headings")
         self.table.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("Treeview", background="#2b2b2b", foreground="white", fieldbackground="#2b2b2b", rowheight=30)
-        style.configure("Treeview.Heading", background="#1f1f1f", foreground="white", relief="flat")
-        style.map("Treeview", background=[("selected", "#1f6aa5")])
         self.table.heading("title", text="Album Title")
         self.table.heading("artist", text="Artist")
         self.table.heading("genre", text="Genre")
@@ -108,6 +104,7 @@ class MainWindow(ctk.CTk):
         self.detail_release_date = CTkLabel(self.detail_panel, text="")
         self.detail_release_date.grid(row=5, column=0, padx=10, pady=2)
 
+        self.apply_theme()
         self.load_table()
         self.load_genre_filter()
 
@@ -117,7 +114,7 @@ class MainWindow(ctk.CTk):
         items = self.media_service.get_all()
         for item in items:
             artists = ", ".join([a.name for a in item.artists])
-            genres = ", ".join([a.name for a in item.genres])
+            genres = ", ".join([g.name for g in item.genres])
             self.table.insert('', 'end', iid=item.uuid, values=(item.album_title, artists, genres, item.format))
 
         self.load_genre_filter()
@@ -134,8 +131,9 @@ class MainWindow(ctk.CTk):
         dialog.grab_set()
 
     def open_settings_dialog(self):
-        dialog = SettingsDialog(self.conn)
-        dialog.grab_set()
+        dialog = SettingsDialog(self.conn, self)
+        dialog.lift()
+        dialog.attributes("-topmost", True)
 
     def open_edit_dialog(self):
         if not self.table.selection():
@@ -163,8 +161,7 @@ class MainWindow(ctk.CTk):
             self.current_cover_image = photo_image
             self.cover_image.configure(image=photo_image, text="")
         else:
-            blank = Image.new("RGB", (200, 200), "#2b2b2b")
-            blank_photo = ImageTk.PhotoImage(blank)
+            blank_photo = ImageTk.PhotoImage(self.blank_image())
             self.current_cover_image = blank_photo
             self.cover_image.configure(image=blank_photo, text="No Cover")
 
@@ -210,8 +207,7 @@ class MainWindow(ctk.CTk):
         self.genre_filter.configure(values=["All"] + [g.name for g in genres])
 
     def clear_detail_panel(self):
-        blank = Image.new("RGB", (200, 200), "#2b2b2b")
-        blank_photo = ImageTk.PhotoImage(blank)
+        blank_photo = ImageTk.PhotoImage(self.blank_image())
         self.current_cover_image = blank_photo
         self.cover_image.configure(image=blank_photo, text="No Cover")
 
@@ -220,3 +216,38 @@ class MainWindow(ctk.CTk):
         self.detail_genre.configure(text="")
         self.detail_format.configure(text="")
         self.detail_release_date.configure(text="")
+
+    def apply_theme(self):
+        fresh_config = ConfigService()
+        if fresh_config.get_value("appearance", "theme") == "dark":
+            ctk.set_appearance_mode("dark")
+            ctk.set_default_color_theme("blue")
+
+            style = ttk.Style()
+            style.theme_use("clam")
+            style.configure("Treeview", background="#2b2b2b", foreground="white", fieldbackground="#2b2b2b", rowheight=30)
+            style.configure("Treeview.Heading", background="#1f1f1f", foreground="white", relief="flat")
+            style.map("Treeview", background=[("selected", "#1f6aa5")])
+        else:
+            ctk.set_appearance_mode("light")
+            ctk.set_default_color_theme("blue")
+
+            style = ttk.Style()
+            style.theme_use("clam")
+            style.configure("Treeview", background="#f0f0f0", foreground="#000000", fieldbackground="#f0f0f0",rowheight=30)
+            style.configure("Treeview.Heading", background="#e0e0e0", foreground="#000000", relief="flat")
+            style.map("Treeview", background=[("selected", "#1f6aa5")])
+
+        if not self.table.selection() or not self.media_service.get_by_uuid(self.table.selection()[0]).cover_path:
+            blank_photo = ImageTk.PhotoImage(self.blank_image())
+            self.current_cover_image = blank_photo
+            self.cover_image.configure(image=blank_photo)
+
+    def blank_image(self):
+        fresh_config = ConfigService()
+        if fresh_config.get_value("appearance", "theme") == "dark":
+            blank = Image.new("RGB", (200, 200), "#2b2b2b")
+        else:
+            blank = Image.new("RGB", (200, 200), "#f0f0f0")
+
+        return blank

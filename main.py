@@ -1,3 +1,9 @@
+# Simple Media Manager
+# Created by BritishGeekGuy
+# Released under GNU GPLv3
+
+prog_ver = "1.0.0"
+
 from database.schema import *
 from database.connection import *
 
